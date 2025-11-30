@@ -60,6 +60,40 @@ if (function_exists('log_action')) {
 }
 
 // Handle AJAX requests first
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['get_previous_height'])) {
+    // Get previous height for a patient
+    ob_clean();
+    header('Content-Type: application/json');
+    $response = ['success'=>false,'height'=>null,'message'=>''];
+    
+    try {
+        if (!isset($pdo)) throw new Exception("Database connection failed");
+        
+        $user_id = filter_var($_POST['user_id'], FILTER_VALIDATE_INT);
+        if ($user_id === false || $user_id <= 0) throw new Exception('Invalid user id');
+        
+        // Get the first (oldest) height record for this patient
+        $stmt = $pdo->prepare("SELECT height FROM biometrics WHERE user_id = ? ORDER BY record_date ASC, created_at ASC LIMIT 1");
+        $stmt->execute([$user_id]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($result && $result['height']) {
+            $response['success'] = true;
+            $response['height'] = floatval($result['height']);
+            $response['message'] = 'Previous height found';
+        } else {
+            $response['success'] = false;
+            $response['message'] = 'No previous height record found';
+        }
+    } catch (Exception $e) {
+        $response['success'] = false;
+        $response['message'] = $e->getMessage();
+    }
+    
+    echo json_encode($response);
+    exit;
+}
+
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['update_biometrics'])) {
     // Prevent any HTML output
     ob_clean();
@@ -522,6 +556,25 @@ if ($col_check && mysqli_num_rows($col_check) == 0) {
         document.querySelectorAll('form input, form textarea').forEach(el => el.classList.remove('border-red-500'));
 
         modal.classList.remove('hidden');
+        
+        // Fetch previous height and populate the field
+        const heightInput = modal.querySelector('[name="height"]');
+        fetch('info_admin.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: 'get_previous_height=1&user_id=' + userId
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.height) {
+                heightInput.value = data.height;
+                heightInput.setAttribute('title', 'Previous height: ' + data.height + ' cm');
+            }
+        })
+        .catch(error => console.log('Note: Could not fetch previous height:', error));
+        
         const first = modal.querySelector('[name="height"]'); if (first) first.focus();
     }
 

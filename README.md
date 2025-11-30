@@ -1,3 +1,39 @@
+# UMED
+
+This repository contains the UMED PHP application.
+
+Purpose
+- Prepare repository for GitHub and Heroku deployment.
+
+Quick start
+
+1. Initialize git (if needed), commit, and push to GitHub:
+
+```powershell
+git init                     # if the repo is not already a git repo
+git add .
+git commit -m "Add project files and deployment scaffold"
+# Create the remote and push (see options below)
+```
+
+2. Create a GitHub repository and push. You can use `gh` or the GitHub web UI (instructions below).
+
+3. Create a Heroku app and set GitHub Actions secrets (`HEROKU_API_KEY`, `HEROKU_APP_NAME`, `HEROKU_EMAIL`) so the workflow can deploy.
+
+GitHub Actions
+- A workflow at `.github/workflows/deploy-heroku.yml` will deploy `main` to Heroku when pushed.
+
+Heroku notes
+- The repository already contains a `Procfile` (`web: heroku-php-apache2 .`) and `composer.json`, which the Heroku PHP buildpack uses to detect the app.
+
+If you want, I can create the GitHub repository for you and push the code — provide a GitHub Personal Access Token with `repo` scope, or let me guide you to run the `gh` CLI commands locally.
+
+---
+Files added/updated by scaffold:
+- `README.md`
+- `.gitignore`
+- `.github/workflows/deploy-heroku.yml`
+- `composer.json` (metadata)
 # Project HCI - Medical Appointment System
 
 ## Project Structure (Cleaned & Restructured)

@@ -59,6 +59,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }
     }
 
+    // Validate phone - must be 11 digits (optional field)
+    $phone_validation_error = null;
+    if (!empty($phone)) {
+        if (!preg_match('/^\d{11}$/', $phone)) {
+            $phone_validation_error = "Phone number must be 11 digits.";
+        }
+    }
+
     // basta security sa password
     if ($name_validation_error) {
         $errorMessage = $name_validation_error;

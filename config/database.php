@@ -42,6 +42,43 @@ $DB_PORT = $_ENV['DB_PORT'] ?? $_SERVER['DB_PORT'] ?? 3306;
 $DB_USER = $_ENV['DB_USERNAME'] ?? $_SERVER['DB_USERNAME'] ?? 'root';
 $DB_PASS = $_ENV['DB_PASSWORD'] ?? $_SERVER['DB_PASSWORD'] ?? '';
 
+// Support for platform-provided connection strings (Railway, Heroku style)
+// These platforms commonly provide a single `DATABASE_URL` or `MYSQL_URL`.
+// If present, parse it and map to the DB_* variables used by the app.
+$platformUrl = getenv('DATABASE_URL') ?: getenv('MYSQL_URL') ?: getenv('MYSQL_DATABASE_URL');
+if ($platformUrl) {
+    $parts = parse_url($platformUrl);
+    if ($parts !== false) {
+        // scheme may be mysql, mysql2, or mariadb; normalize
+        $scheme = $parts['scheme'] ?? '';
+        if (in_array(strtolower($scheme), ['mysql', 'mysql2', 'mariadb', 'mariadb+mysql'])) {
+            $DB_HOST = $parts['host'] ?? $DB_HOST;
+            $DB_PORT = $parts['port'] ?? $DB_PORT;
+            $DB_USER = $parts['user'] ?? $DB_USER;
+            $DB_PASS = $parts['pass'] ?? $DB_PASS;
+            // path begins with a slash
+            if (!empty($parts['path'])) {
+                $DB_NAME = ltrim($parts['path'], '/');
+            }
+            // export into environment arrays so legacy code can read them
+            $_ENV['DB_HOST'] = $DB_HOST;
+            $_ENV['DB_PORT'] = $DB_PORT;
+            $_ENV['DB_USERNAME'] = $DB_USER;
+            $_ENV['DB_PASSWORD'] = $DB_PASS;
+            $_ENV['DB_DATABASE'] = $DB_NAME;
+            $_SERVER['DB_HOST'] = $DB_HOST;
+            $_SERVER['DB_PORT'] = $DB_PORT;
+            $_SERVER['DB_USERNAME'] = $DB_USER;
+            $_SERVER['DB_PASSWORD'] = $DB_PASS;
+            $_SERVER['DB_DATABASE'] = $DB_NAME;
+            putenv("DB_HOST=$DB_HOST");
+            putenv("DB_PORT=$DB_PORT");
+            putenv("DB_USERNAME=$DB_USER");
+            putenv("DB_PASSWORD=$DB_PASS");
+            putenv("DB_DATABASE=$DB_NAME");
+        }
+    }
+}
 class Database
 {
     private static $instance = null;

@@ -1,3 +1,6 @@
 {
+  "name": "aerjunladines/umed",
+  "description": "UMED PHP application",
+  "type": "project",
   "require": {}
 }

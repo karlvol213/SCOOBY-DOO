@@ -20,7 +20,10 @@ RUN chown -R www-data:www-data /var/www/html && \
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 
 # Expose port 80
+# Expose default port
 EXPOSE 80
 
-# Start Apache
-CMD ["apache2-foreground"]
+# Use the PORT environment variable if provided by the platform (e.g. Railway).
+# At container start we replace Apache's Listen directive with the runtime PORT
+# then start the foreground process.
+CMD ["/bin/bash", "-lc", "PORT_ENV=\${PORT:-80}; sed -ri \"s/Listen [0-9]+/Listen ${PORT_ENV}/g\" /etc/apache2/ports.conf /etc/apache2/sites-available/*.conf; apache2-foreground"]
